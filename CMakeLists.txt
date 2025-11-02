@@ -20,14 +20,10 @@ set(SOURCES
     src/kem.cpp
     src/attack.cpp
     experiments/experiment_g_conditions.cpp
-    experiments/benchmark_trios_attack.cpp
-    experiments/export_keys.cpp
 )
 
 add_library(gln_core ${SOURCES})
 target_include_directories(gln_core PRIVATE ${PROJECT_SOURCE_DIR}/extern/boost_1_89_0)
-
-add_subdirectory(${PROJECT_SOURCE_DIR}/extern/json)
 
 if (GLN_USE_GMP)
   find_package(GMP REQUIRED)
@@ -93,18 +89,6 @@ add_executable(demo_kem examples/demo_kem.cpp)
 target_include_directories(demo_kem PRIVATE ${PROJECT_SOURCE_DIR}/include)
 target_link_libraries(demo_kem PRIVATE gln_core)
 
-add_executable(benchmark_main experiments/benchmark_main.cpp)
-target_include_directories(benchmark_main PRIVATE ${PROJECT_SOURCE_DIR}/include)
-target_link_libraries(benchmark_main PRIVATE gln_core)
-
-add_executable(benchmark_trios_attack experiments/benchmark_trios_attack.cpp)
-target_include_directories(benchmark_trios_attack PRIVATE ${PROJECT_SOURCE_DIR}/include)
-target_link_libraries(benchmark_trios_attack PRIVATE gln_core)
-
 add_executable(experiment_g_conditions experiments/experiment_g_conditions.cpp)
 target_include_directories(experiment_g_conditions PRIVATE ${PROJECT_SOURCE_DIR}/include)
 target_link_libraries(experiment_g_conditions PRIVATE gln_core)
-
-add_executable(export_keys experiments/export_keys.cpp)
-target_include_directories(export_keys PRIVATE ${PROJECT_SOURCE_DIR}/include)
-target_link_libraries(export_keys PRIVATE gln_core)
