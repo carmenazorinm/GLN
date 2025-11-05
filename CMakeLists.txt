@@ -20,6 +20,7 @@ set(SOURCES
     src/kem.cpp
     src/attack.cpp
     experiments/experiment_g_conditions.cpp
+    experiments/experiment_trios_attack.cpp 
 )
 
 add_library(gln_core ${SOURCES})
@@ -92,3 +93,7 @@ target_link_libraries(demo_kem PRIVATE gln_core)
 add_executable(experiment_g_conditions experiments/experiment_g_conditions.cpp)
 target_include_directories(experiment_g_conditions PRIVATE ${PROJECT_SOURCE_DIR}/include)
 target_link_libraries(experiment_g_conditions PRIVATE gln_core)
+
+add_executable(experiment_trios_attack experiments/experiment_trios_attack.cpp)
+target_include_directories(experiment_trios_attack PRIVATE ${PROJECT_SOURCE_DIR}/include)
+target_link_libraries(experiment_trios_attack PRIVATE gln_core)

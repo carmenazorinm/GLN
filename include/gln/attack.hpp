@@ -31,6 +31,8 @@ AttackReport attack_triples(const PublicKey& pk,
                             std::size_t beta,
                             std::size_t max_candidates = 10000);
 
+AttackReport attack_triples(const PublicKey& pk, std::size_t b, std::size_t beta);
+
 // Helper para generar candidatos de primos (simple). Sustituible por tus nt_utils.
 std::vector<BigInt> generate_prime_candidates(std::size_t b,
                                               std::size_t beta,
