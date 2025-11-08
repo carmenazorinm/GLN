@@ -117,4 +117,10 @@ BigInt next_prime(const BigInt& start){
   return p;
 }
 
+// Conversión BigInt -> uint32 (vía decimal). Asume que cabe en 32 bits.
+uint32_t to_u32(const BigInt& x) {
+    const std::string s = x.str();
+    return static_cast<uint32_t>(std::stoul(s));
+}
+
 } // namespace gln

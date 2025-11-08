@@ -62,7 +62,7 @@ AttackReport attack_triples(const PublicKey& pk,
                             std::size_t max_candidates)
 {
   AttackReport rep;
-  std::cout << "Real g: " << pk.g.str() << std::endl;
+  // std::cout << "Real g: " << pk.g.str() << std::endl;
   auto [i, j, k] = indices;
   if (i >= pk.t.size() || j >= pk.t.size() || k >= pk.t.size()) return rep;
 
@@ -82,7 +82,7 @@ AttackReport attack_triples(const PublicKey& pk,
 
   BigInt best_g(0);
   std::size_t tested = 0;
-  std::cout << "Ataque " << " con i="<<i << " j=" << j << " k=" << k << std::endl;
+  // std::cout << "Ataque " << " con i="<<i << " j=" << j << " k=" << k << std::endl;
   // 2) Bucle sobre triadas. Para pruebas, limítalo (p.ej. primeros 2000 primos)
   const std::size_t N = P.size();
   for (std::size_t a = 0; a < N; ++a) {
@@ -94,11 +94,11 @@ AttackReport attack_triples(const PublicKey& pk,
 
       for (std::size_t c = b2+1; c < N; ++c) {
         const BigInt& p3 = P[c];
-        std::cout << "[     Primos     ]: " << " con p1="<<p1.str() << " p2=" << p2.str() << " p3=" << p3.str();
+        // std::cout << "[     Primos     ]: " << " con p1="<<p1.str() << " p2=" << p2.str() << " p3=" << p3.str();
         BigInt X13 = (p1 * p3) * (t1 - t3) - (p3 - p1);
 
         BigInt g_guess = gcd(X12, X13);
-        std::cout << " g: " << g_guess.str() << std::endl;
+        // std::cout << " g: " << g_guess.str() << std::endl;
         // std::cout << "gcd: " << g_guess.str() << " primes: "<< p1 << ", " << p2 << ", " << p3 << std::endl;
         ++tested;
 
@@ -121,7 +121,7 @@ AttackReport attack_triples(const PublicKey& pk,
 
 AttackReport attack_triples(const PublicKey& pk, std::size_t b, std::size_t beta) {
   AttackReport rep;
-  std::cout << "Real g: " << pk.g.str() << std::endl;
+  // std::cout << "Real g: " << pk.g.str() << std::endl;
 
   std::size_t max_candidates =  pow(2,(b+beta))/((b+beta)*log(2))-pow(2,b)/(b*log(2));
   std::vector<BigInt> P = generate_prime_candidates(b, beta, max_candidates);
@@ -143,7 +143,7 @@ AttackReport attack_triples(const PublicKey& pk, std::size_t b, std::size_t beta
         t2 = pk.t[pos_t2];
         t3 = pk.t[pos_t3];
 
-        std::cout << "Ataque " << " con i="<<pos_t1 << " j=" << pos_t2 << " k=" << pos_t3 << std::endl;
+        // std::cout << "Ataque " << " con i="<<pos_t1 << " j=" << pos_t2 << " k=" << pos_t3 << std::endl;
 
         for (std::size_t a = 0; a < N  && !rep.found_exact; ++a) {
         const BigInt& p1 = P[a];
@@ -154,11 +154,11 @@ AttackReport attack_triples(const PublicKey& pk, std::size_t b, std::size_t beta
 
           for (std::size_t c = b2+1; c < N  && !rep.found_exact; ++c) {
             const BigInt& p3 = P[c];
-            std::cout << "[     Primos     ]: " << " con p1="<<p1.str() << " p2=" << p2.str() << " p3=" << p3.str();
+            // std::cout << "[     Primos     ]: " << " con p1="<<p1.str() << " p2=" << p2.str() << " p3=" << p3.str();
             BigInt X13 = (p1 * p3) * (t1 - t3) - (p3 - p1);
 
             BigInt g_guess = gcd(X12, X13);
-            std::cout << " g: " << g_guess.str() << std::endl;
+            // std::cout << " g: " << g_guess.str() << std::endl;
             // std::cout << "gcd: " << g_guess.str() << " primes: "<< p1 << ", " << p2 << ", " << p3 << std::endl;
             ++tested;
 

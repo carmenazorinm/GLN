@@ -22,13 +22,25 @@ struct BigInt::Impl {
     if (neg) v = -v;
   }
   Impl(const Impl& o) : v(o.v) {}
+
+  explicit Impl(const uint8_t* buf, size_t len) : v(0) {
+    for (size_t i = 0; i < len; ++i) {
+        v *= 256;
+        v += static_cast<unsigned long long>(buf[i]);
+    }
+  }
 };
 
 BigInt::BigInt() : p_(new Impl()) {}
 BigInt::BigInt(long long x) : p_(new Impl(x)) {}
 BigInt::BigInt(const std::string& s) : p_(new Impl(s)) {}
+// Convierte un buffer de bytes big-endian a BigInt (usa ctor desde string decimal si no tienes uno binario)
+BigInt::BigInt(const uint8_t* buf, size_t len) : p_(new Impl(buf,len)){}
+
 BigInt::BigInt(const BigInt& o) : p_(new Impl(*o.p_)) {}
 BigInt::BigInt(BigInt&& o) noexcept : p_(o.p_) { o.p_ = nullptr; }
+
+
 BigInt& BigInt::operator=(const BigInt& o) {
   if (this != &o) { Impl* np = new Impl(*o.p_); delete p_; p_ = np; }
   return *this;
@@ -107,6 +119,7 @@ BigInt BigInt::sqrt(const BigInt& x)  {
     result.p_->v = boost::multiprecision::sqrt(x.p_->v);
     return result;
 }
+
 
 // Output operator
 std::ostream& operator<<(std::ostream& os, const BigInt& x) {

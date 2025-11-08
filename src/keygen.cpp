@@ -16,7 +16,6 @@ namespace {
 // Convierte un buffer de bytes big-endian a BigInt (usa ctor desde string decimal si no tienes uno binario)
 static BigInt be_bytes_to_bigint(const uint8_t* buf, size_t len) {
     // Implementación simple: construir en base 256 acumulando.
-    // Asumimos que BigInt tiene operadores básicos *=, +=
     BigInt x(0);
     for (size_t i = 0; i < len; ++i) {
         x *= BigInt(256);
@@ -25,52 +24,73 @@ static BigInt be_bytes_to_bigint(const uint8_t* buf, size_t len) {
     return x;
 }
 
-// Genera un BigInt uniforme en [0, 2^bits - 1]
+// Genera un BigInt uniforme (misma probabilidad para cada valor) en [0, 2^bits - 1]
 static BigInt random_bits(gln::Random& rng, size_t bits) {
     if (bits == 0) return BigInt(0);
     size_t bytes = (bits + 7) / 8;
     std::vector<uint8_t> buf(bytes);
-    rng.random_bytes(buf.data(), buf.size());
+    rng.random_bytes(buf.data(), buf.size()); // rellena el buffer con bytes aleatorios
     // clear bits above 'bits'
     unsigned extra = static_cast<unsigned>(bytes * 8 - bits);
     if (extra) buf[0] &= static_cast<uint8_t>(0xFFu >> extra);
-    return be_bytes_to_bigint(buf.data(), buf.size());
+    return BigInt(buf.data(), buf.size());
 }
+
+/*
+random_of_bitlen(rng, 4) -> yo quiero 2^3=8 y 2^4-1=15
+    x entre 0 y 15 -> x = 4
+    i = 0, 1, 2
+    high = 2, 4, 8
+    if (x < 8) -> x += 8 == 12
+    x = 13
+    ---------
+    lo que hace es, si sale:
+    0 -> 0+8=8
+    1 -> 1+8=9
+    2 -> 2+8=10
+    ...
+    7 -> 7+8=15
+    8, 9, 10, ..., 15 los deja igual
+*/
 
 // Genera un BigInt en [2^(bits-1), 2^bits - 1] y lo fuerza impar si force_odd
 static BigInt random_of_bitlen(gln::Random& rng, size_t bits, bool force_odd = false) {
     if (bits == 0) return BigInt(0);
     BigInt x = random_bits(rng, bits);
     // asegúrate del bit alto
-    BigInt one(1);
     BigInt high(1);
     for (size_t i = 0; i + 1 < bits; ++i) {
         high += high; // equivale a high *= 2; usa lo que tengas implementado
     }
     if (x < high) x += high;
-    // Si tu BigInt aún no tiene operador <<, reemplaza esta línea por:
-    // high = BigInt("1"); for (size_t i=0;i<bits-1;i++) high = high + high;
-    if (x < high) x += high;
-    // si se pasó, recorta a bits ajustando con mod 2^bits (opcional)
+
     if (force_odd) {
-        if (((x % gln::BigInt(2)) == gln::BigInt(0))) x += one;
+        if (((x % gln::BigInt(2)) == gln::BigInt(0))) x += BigInt(1);
     }
     return x;
 }
 
-// Uniforme en [1, m-1]
-static BigInt random_range_1_to_m1(gln::Random& rng, const BigInt& m) {
-    // Rechazo simple: genera k bits ~ bitlen(m), toma mod m, reintenta si 0
-    // (m es grande; la expectativa de reintentos es baja)
-    // Necesitas bit_length(); si no lo tienes, aproxima con m.str() base10 -> bits~log2(10)*digits
-    const std::string ms = m.str();
-    // aprox bits por decimal:  log2(10)≈3.322
-    size_t bits = static_cast<size_t>(ms.size() * 3323ull / 1000ull) + 2u;
-    for (;;) {
-        BigInt x = mod(random_bits(rng, bits), m);
-        if (!(x == BigInt(0))) return x;
+// Devuelve uniforme en [1, m-1] usando rechazo exacto.
+// Precondición: bits_m >= bit_length(m) y m > 1.
+static BigInt random_range_1_to_m1(gln::Random& rng, const BigInt& m, size_t bits_m) {
+    if (m <= BigInt(1)) throw std::invalid_argument("m must be > 1");
+
+    // two_k = 2^bits_m
+    BigInt two_k(1);
+    for (size_t i = 0; i < bits_m; ++i) two_k += two_k;
+
+    // Aceptaremos x solo si x < limit, donde limit es múltiplo de m
+    BigInt limit = two_k - (two_k % m);  // = floor(2^k / m) * m
+
+    BigInt r(0);
+    while( r == BigInt(0) ){
+        BigInt x = random_bits(rng, bits_m);   // uniforme en [0, 2^k - 1]
+        if (x >= limit) continue;           // rechaza la "cola"
+        r = x % m;                   // ahora r es uniforme en [0, m-1]
+        if (r != BigInt(0)) return r;       // queremos [1, m-1]
     }
 }
+
 
 // Genera un impar aleatorio de 'bits' y sube al siguiente primo >= ese impar.
 static BigInt random_prime_bits(gln::Random& rng, size_t bits, const BigInt& z_min) {
@@ -130,7 +150,7 @@ KeyPair keygen(const Params& prm, gln::Random& rng) {
     // 4) u aleatorio en (0,g), distinto de todos los h_i  :contentReference[oaicite:7]{index=7}
     BigInt u;
     for (;;) {
-        u = random_range_1_to_m1(rng, g);
+        u = random_range_1_to_m1(rng, g, bits_g);
         bool clash = false;
         for (const auto& hi : h) { if (u == hi) { clash = true; break; } }
         if (!clash) break;

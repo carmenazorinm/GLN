@@ -7,6 +7,7 @@ BigInt mod(const BigInt& a, const BigInt& m);        // en [0, m-1]
 BigInt addmod(const BigInt& a, const BigInt& b, const BigInt& m);
 BigInt submod(const BigInt& a, const BigInt& b, const BigInt& m);
 BigInt mulmod(const BigInt& a, const BigInt& b, const BigInt& m);
+uint32_t to_u32(const BigInt& x);
 
 BigInt gcd(BigInt a, BigInt b);
 void   egcd(const BigInt& a, const BigInt& b, BigInt& x, BigInt& y, BigInt& g);

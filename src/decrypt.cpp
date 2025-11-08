@@ -1,4 +1,5 @@
 #include "gln/decrypt.hpp"
+#include "gln/bigint.hpp"  // to_u32
 #include "gln/nt_utils.hpp"    // mod, gcd, invmod, treea
 
 #include <stdexcept>
@@ -6,14 +7,14 @@
 
 namespace gln {
 
-namespace {
-// Conversión BigInt -> uint32 (vía decimal). Asume que cabe en 32 bits.
-static uint32_t to_u32(const BigInt& x) {
-    const std::string s = x.str();
-    // std::stoul maneja signos; aquí x es no negativo en uso normal
-    return static_cast<uint32_t>(std::stoul(s));
-}
-} // namespace
+// namespace {
+// // Conversión BigInt -> uint32 (vía decimal). Asume que cabe en 32 bits.
+// static uint32_t to_u32(const BigInt& x) {
+//     const std::string s = x.str();
+//     // std::stoul maneja signos; aquí x es no negativo en uso normal
+//     return static_cast<uint32_t>(std::stoul(s));
+// }
+// } // namespace
 
 std::vector<uint32_t> decrypt(const Ciphertext& ct,
                               const PrivateKey& sk,

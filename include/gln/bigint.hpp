@@ -11,6 +11,7 @@ public:
   BigInt();                                  // 0
   explicit BigInt(long long x);              // desde entero
   explicit BigInt(const std::string& dec);   // desde cadena decimal
+  explicit BigInt(const uint8_t* buf, size_t len); // desde buffer de bytes
   BigInt(const BigInt&);                     // copia
   BigInt(BigInt&&) noexcept;                 // movimiento
   BigInt& operator=(const BigInt&);          // asignación copia
