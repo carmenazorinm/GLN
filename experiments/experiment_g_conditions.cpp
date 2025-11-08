@@ -38,6 +38,10 @@ static std::size_t bitlen(std::vector<BigInt> x) {
   return size;
 }
 
+static float density(std::size_t n, std::size_t bits_g) {
+    return n*1.0/bits_g;
+}
+
 
 // Mensaje aleatorio válido: peso t_w, símbolos en [1, z-1]
 static std::vector<uint32_t> random_plaintext(gln::Random& rng, const gln::Params& prm) {
@@ -85,8 +89,9 @@ int main(int argc, char** argv) {
     uint64_t seed = 42;
     int gbits_offset=0;
     bool want_csv = false;
-    bool quiet = false;
+    bool quiet = true;
     bool check_g = false;
+    bool want_json = false;
 
     // parseo sencillo de args
     for (int i=1;i<argc;++i) {
@@ -98,6 +103,7 @@ int main(int argc, char** argv) {
         else if (a=="--seed" && i+1<argc) { seed = std::stoull(argv[++i]); }
         else if (a=="--gbits-offset" && i+1<argc) {gbits_offset = std::stoi(argv[++i]); }
         else if (a=="--csv") { want_csv = true; }
+        else if (a=="--json") { want_json = true; }
         else if (a=="--quiet") { quiet = false; }
         else if (a=="--check-g") { check_g = true; }
         else if (a=="--help") { print_usage(argv[0]); return 0; }
@@ -138,6 +144,8 @@ int main(int argc, char** argv) {
     auto kp = gln::keygen(prm, rng);
     auto t1 = clk::now();
     std::chrono::duration<double> dt_keygen = t1 - t0;
+
+    float densidad = density(prm.n, prm.bits_g);
 
     if (!quiet) {
         std::cout << "KeyGen completed in " << std::fixed << std::setprecision(6)
@@ -212,7 +220,22 @@ int main(int argc, char** argv) {
                   << dt_keygen.count() << "," << dt_encrypt.count() << "," << dt_decrypt.count() << ","
                   << (ok ? "1" : "0")
                   << "\n";
-    } else {
+    } else if(want_json) {
+        std::cout << "{" << "\"h\": [" << kp.pk.t[0].str();
+        for(int pos = 1; pos < kp.pk.t.size(); pos++) {
+            std::cout << "," << kp.pk.t[pos].str();
+        }
+        std::cout << "], \"ciphertext\": { \"c1\": \"" << ct.c1.str() << "\", \"c2\": " << ct.c2.str() << "},";
+        std::cout << "\"plaintext\": [" << e[0];
+        for(int i = 1; i < e.size(); i++){
+            std::cout << "," << e[i];
+        }
+        std::cout << "],";
+        std::cout << "\"d\": " << densidad;
+        std::cout << "}";
+    }
+    else {
+        float primos = pow(2,(prm.b+prm.beta))/((prm.b+prm.beta)*log(2))-pow(2,prm.b)/(prm.b*log(2));
         // si no se pide CSV, imprimimos una línea corta tambien para scripting (comando simple)
         std::cout << "SUMMARY: "
           << "n=" << prm.n << " t=" << prm.t_w << " z=" << prm.z
@@ -223,13 +246,11 @@ int main(int argc, char** argv) {
           << " keygen_s=" << std::fixed << std::setprecision(6) << dt_keygen.count()
           << " enc_s=" << dt_encrypt.count()
           << " dec_s=" << dt_decrypt.count()
-          << " ok=" << (ok? "1":"0") << "\n";
+          << " ok=" << (ok? "1":"0")
+          << " n_primes=" << primos
+          << " density=" << densidad << "\n";
 
     }
-
-    // Calculo de cantidad de primos
-    float primos = pow(2,(prm.b+prm.beta))/((prm.b+prm.beta)*log(2))-pow(2,prm.b)/(prm.b*log(2));
-    std::cout << "Cantidad primos disponibles: 2^" << (prm.b+prm.beta)/((prm.b+prm.beta)*log(2)) << " - 2^" << prm.b/(prm.b*log(2)) << " = " <<  primos << std::endl;
 
     return ok ? 0 : 2;
 }
