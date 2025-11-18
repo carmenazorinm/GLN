@@ -23,10 +23,10 @@ Para ejecutar los tests:
 ctest --test-dir build
 ```
 
-El experimento principal trata de, dados unos parámetross n, t, z y beta, calcular los tiempos de cada tarea. Pra ejecutarlo:
+El experimento principal trata de, dados unos parámetross n, t, z y beta, calcular los tiempos de cada tarea. Para ejecutarlo:
 ```
 cd build
-./experiment_g_conditions --n 50 --t 10 --z 1024 --beta 1 --seed 123 --check-g
+./experiment_g_conditions --n 50 --t 10 --z 1024 --beta 1 --seed 123
 ```
 
 El resultado es el siguiente:
@@ -43,3 +43,26 @@ SUMMARY: n=50 t=10 z=1024 g_bits=69 c1_bits=73 c2_bits=4 pubkey_bits=3442 keygen
 Cantidad primos disponibles: 2^1.442695 - 2^1.442695 = 120.871613
 ```
 
+Para distintos tipos de output existen las flags: --csv, --json, --quiet.
+
+Para ejecutar experimentos con distintos parámetros se puede utilizar elscript de python run_experiments.py generado con ayuda de ChatGPT.
+```
+cd experiments
+python3 run_experiments.py --exe ../build/experiment_g_conditions --mode preset --preset mini
+```
+
+donde el preset mini se ve en el script como
+```
+"mini": {
+        "Ns": [32, 64],
+        "Ts": [6],
+        "Zs": [256],
+        "Betas": [3],
+        "mode": "sweep",
+        "param": "n",
+        "runs": 2
+    }
+```
+Estos significa que se ejeucta el ejecutable indicado con todas las combinaciones delos parametros indicados. con mode indicamos que estamos haciendo un barrido del parametro n y hacemos este experimento 2 veces indicado con run.
+este script también puede generar plots con la flag --plots directorio_plots y se puede ejecutar en varios threads con --thread  n-threads.
+Por defecto se ejecuta con 1 cread y se hacen 3 runs de cad configuracion.

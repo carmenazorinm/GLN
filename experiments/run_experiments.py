@@ -1,21 +1,6 @@
 #!/usr/bin/env python3
 """
-gln_runner.py
-
-Ejecutor flexible para tu binario GLN con --check-g.
-Soporta:
-- presets o listas de Ns, Ts, Zs, Betas
-- sweep: variar un parámetro manteniendo base fijos
-- grid: producto cartesiano de todos
-- repeticiones por configuración con mediana
-- paralelismo con --threads
-- CSV crudo y CSV agregado
-- gráficos opcionales:
-    1) keygen vs <param>
-    2) pubkey_bits vs <param>
-    3) (enc+dec) vs pubkey_bits
-
-Ejemplos:
+Cómo ejeuctarlo:
   python3 gln_runner.py --exe ~/experiments/experiment_g_conditions \
     --mode sweep --param n --Ns 32,64,128,256 --base-t 6 --base-z 256 --base-beta 3 \
     --runs 3 --threads 4 --out results.csv --plots plots
@@ -74,7 +59,6 @@ PRESETS = {
         "mode": "sweep",
         "param": "t",
         "runs": 10,
-        "description": "Barrido de densidad para N=50. Se varía T en {10,18,25,30,35,40} (densidades 0.2–0.8). Z=256 y β=3 fijos. Se miden tiempos y tamaño de clave pública para estimar el efecto de la densidad sobre rendimiento y tamaño."
     },
     "density_time_sweep_n100": {
         "Ns": [100],
@@ -84,7 +68,6 @@ PRESETS = {
         "mode": "sweep",
         "param": "t",
         "runs": 10,
-        "description": "Barrido de densidad para N=100. Se varía T en {10,18,25,30,35,40} (densidades 0.2–0.8). Z=256 y β=3 fijos. Se miden tiempos y tamaño de clave pública para estimar el efecto de la densidad sobre rendimiento y tamaño."
     },
     "density_time_sweep_n200": {
         "Ns": [200],
@@ -94,7 +77,6 @@ PRESETS = {
         "mode": "sweep",
         "param": "t",
         "runs": 10,
-        "description": "Barrido de densidad para N=200. Se varía T en {10,18,25,30,35,40} (densidades 0.2–0.8). Z=256 y β=3 fijos. Se miden tiempos y tamaño de clave pública para estimar el efecto de la densidad sobre rendimiento y tamaño."
     },
     "density_time_sweep_n400": {
         "Ns": [400],
@@ -104,7 +86,6 @@ PRESETS = {
         "mode": "sweep",
         "param": "t",
         "runs": 10,
-        "description": "Barrido de densidad para N=50. Se varía T para densidades 0.2–0.8. Z=256 y β=3 fijos. Se miden tiempos y tamaño de clave pública para estimar el efecto de la densidad sobre rendimiento y tamaño."
     },
     "density_zetas_sweep_n100_b40": {
         "Ns": [100],
@@ -114,7 +95,6 @@ PRESETS = {
         "mode": "sweep",
         "param": "z",
         "runs": 10,
-        "description": "Barrido del tamaño del afabeto para N=50. Se varía T en {10,18,25,30,35,40} (densidades 0.2–0.8). Z=256 y β=3 fijos. Se miden tiempos y tamaño de clave pública para estimar el efecto de la densidad sobre rendimiento y tamaño."
     },
     "density_zetas_sweep_n50_b40": {
         "Ns": [50],
@@ -124,7 +104,6 @@ PRESETS = {
         "mode": "sweep",
         "param": "z",
         "runs": 10,
-        "description": "Barrido del tamaño del afabeto para N=50. Se varía T en {10,18,25,30,35,40} (densidades 0.2–0.8). Z=256 y β=3 fijos. Se miden tiempos y tamaño de clave pública para estimar el efecto de la densidad sobre rendimiento y tamaño."
     },
     "density_zetas_sweep_n200_b40": {
         "Ns": [200],
@@ -134,7 +113,6 @@ PRESETS = {
         "mode": "sweep",
         "param": "z",
         "runs": 10,
-        "description": "Barrido del tamaño del afabeto para N=50. Se varía T en {10,18,25,30,35,40} (densidades 0.2–0.8). Z=256 y β=3 fijos. Se miden tiempos y tamaño de clave pública para estimar el efecto de la densidad sobre rendimiento y tamaño."
     },
     "density_zetas_sweep_n400_b40": {
         "Ns": [400],
@@ -144,7 +122,6 @@ PRESETS = {
         "mode": "sweep",
         "param": "z",
         "runs": 10,
-        "description": "Barrido del tamaño del afabeto para N=50. Se varía T en {10,18,25,30,35,40} (densidades 0.2–0.8). Z=256 y β=3 fijos. Se miden tiempos y tamaño de clave pública para estimar el efecto de la densidad sobre rendimiento y tamaño."
     },
     "density0.6_zetas_sweep_n100_b40": {
         "Ns": [100],
@@ -154,7 +131,6 @@ PRESETS = {
         "mode": "sweep",
         "param": "z",
         "runs": 10,
-        "description": "Barrido del tamaño del afabeto para N=50. Se varía T en {10,18,25,30,35,40} (densidades 0.2–0.8). Z=256 y β=3 fijos. Se miden tiempos y tamaño de clave pública para estimar el efecto de la densidad sobre rendimiento y tamaño."
     },
     "density0.6_zetas_sweep_n50_b40": {
         "Ns": [50],
@@ -164,7 +140,6 @@ PRESETS = {
         "mode": "sweep",
         "param": "z",
         "runs": 10,
-        "description": "Barrido del tamaño del afabeto para N=50. Se varía T en {10,18,25,30,35,40} (densidades 0.2–0.8). Z=256 y β=3 fijos. Se miden tiempos y tamaño de clave pública para estimar el efecto de la densidad sobre rendimiento y tamaño."
     },
     "density0.6_zetas_sweep_n200_b40": {
         "Ns": [200],
@@ -174,7 +149,6 @@ PRESETS = {
         "mode": "sweep",
         "param": "z",
         "runs": 10,
-        "description": "Barrido del tamaño del afabeto para N=50. Se varía T en {10,18,25,30,35,40} (densidades 0.2–0.8). Z=256 y β=3 fijos. Se miden tiempos y tamaño de clave pública para estimar el efecto de la densidad sobre rendimiento y tamaño."
     },
     "density0.6_zetas_sweep_n400_b40": {
         "Ns": [400],
@@ -184,7 +158,6 @@ PRESETS = {
         "mode": "sweep",
         "param": "z",
         "runs": 10,
-        "description": "Barrido del tamaño del afabeto para N=50. Se varía T en {10,18,25,30,35,40} (densidades 0.2–0.8). Z=256 y β=3 fijos. Se miden tiempos y tamaño de clave pública para estimar el efecto de la densidad sobre rendimiento y tamaño."
     },
 
     "density0.8_zetas_sweep_n100_b40": {
@@ -195,7 +168,6 @@ PRESETS = {
         "mode": "sweep",
         "param": "z",
         "runs": 10,
-        "description": "Barrido del tamaño del afabeto para N=50. Se varía T en {10,18,25,30,35,40} (densidades 0.2–0.8). Z=256 y β=3 fijos. Se miden tiempos y tamaño de clave pública para estimar el efecto de la densidad sobre rendimiento y tamaño."
     },
     "density0.8_zetas_sweep_n50_b40": {
         "Ns": [50],
@@ -205,7 +177,6 @@ PRESETS = {
         "mode": "sweep",
         "param": "z",
         "runs": 10,
-        "description": "Barrido del tamaño del afabeto para N=50. Se varía T en {10,18,25,30,35,40} (densidades 0.2–0.8). Z=256 y β=3 fijos. Se miden tiempos y tamaño de clave pública para estimar el efecto de la densidad sobre rendimiento y tamaño."
     },
     "density0.8_zetas_sweep_n200_b40": {
         "Ns": [200],
@@ -215,7 +186,6 @@ PRESETS = {
         "mode": "sweep",
         "param": "z",
         "runs": 10,
-        "description": "Barrido del tamaño del afabeto para N=50. Se varía T en {10,18,25,30,35,40} (densidades 0.2–0.8). Z=256 y β=3 fijos. Se miden tiempos y tamaño de clave pública para estimar el efecto de la densidad sobre rendimiento y tamaño."
     },
     "density0.8_zetas_sweep_n400_b40": {
         "Ns": [400],
@@ -225,18 +195,14 @@ PRESETS = {
         "mode": "sweep",
         "param": "z",
         "runs": 10,
-        "description": "Barrido del tamaño del afabeto para N=50. Se varía T en {10,18,25,30,35,40} (densidades 0.2–0.8). Z=256 y β=3 fijos. Se miden tiempos y tamaño de clave pública para estimar el efecto de la densidad sobre rendimiento y tamaño."
     }
 }
 
-# ------------- regex salida binario -------------
-# CSV esperado tras tu cambio:
 # CSV,n,t,z,beta,seed,c1_bits,c2_bits,pubkey_bits,time_keygen_s,time_encrypt_s,time_decrypt_s,success
 CSV_LINE_RE = re.compile(
     r"^CSV,(\d+),(\d+),(\d+),(\d+),(\d+),(\d+),(\d+),(\d+),(\d+),([0-9.]+),([0-9.]+),([0-9.]+),([01])$"
 )
 
-# SUMMARY esperado tras tu cambio:
 # SUMMARY: n=.. t=.. z=.. g_bits=.. c1_bits=.. c2_bits=.. pubkey_bits=.. keygen_s=.. enc_s=.. dec_s=.. ok=.
 SUMMARY_RE = re.compile(
     r"SUMMARY:.* n=(\d+)\s+t=(\d+)\s+z=(\d+)\s+g_bits=(\d+)\s+"
@@ -287,7 +253,6 @@ def parse_exec_output(out: str):
             res["ok"] = (m2.group(11) == "1")
             continue
 
-    # Fallbacks por si falta algo
     if res["time_keygen"] is None:
         m = re.search(r"KeyGen completed in\s+([0-9.]+)\s*s", out)
         if m: res["time_keygen"] = float(m.group(1))
@@ -312,7 +277,6 @@ def parse_exec_output(out: str):
         if m: res["c2_bits"] = int(m.group(1))
     return res
 
-# ---------------- ejecución ----------------
 def calculate_t(n):
     return int(k*n/50)
 
@@ -321,7 +285,7 @@ def calculate_beta(n):
 
 def run_once(exe, n, t, z, beta, seed, use_csv=True, timeout=900):
     args = ["--n", str(n), "--t", str(t), "--z", str(z), "--beta", str(calculate_beta(n)),
-            "--seed", str(seed), "--check-g"]
+            "--seed", str(seed)]
     if use_csv:
         args.append("--csv")
     cmd = [exe] + args
@@ -542,11 +506,8 @@ def main():
     write_csv(out_agg, aggs, agg_header)
     print(f"CSV agregado: {out_agg}")
 
-    # plots opcionales
     if args.plots:
-        # si es sweep, graficamos contra el param barrido; si es grid, contra n
         param_for_plots = args.param if args.mode == "sweep" and args.param else "n"
-        # normalizar claves para función de plots
         aggs_for_plot = []
         for a in aggs:
             d = dict(a)
