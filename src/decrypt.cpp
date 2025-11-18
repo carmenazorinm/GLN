@@ -59,22 +59,8 @@ std::vector<uint32_t> decrypt(const Ciphertext& ct,
         BigInt A = lambda / pk;                       // lambda / p_k
         BigInt A_inv = invmod(mod(A, pk), pk);        // (A mod pk)^{-1} mod pk
         BigInt e_k = mod(omega * A_inv, pk);          // e_k en [0, pk-1]
-        // opcional: validar rango < z
-        // if (e_k >= BigInt(static_cast<long long>(prm.z))) {
-        //     // Con parámetros correctos, no debería pasar; marcamos error claro
-        //     throw std::runtime_error("decrypt: recovered symbol >= z");
-        // }
         e[idx] = to_u32(e_k);
     }
-
-    // (opcional) Validar peso
-    // std::size_t weight = 0;
-    // for (uint32_t x : e) if (x != 0) ++weight;
-    // if (weight != prm.t_w) {
-    //     // No lanzar necesariamente; pero ayuda a detectar inconsistencias en tests
-    //     // throw std::runtime_error("decrypt: wrong weight in recovered plaintext");
-    // }
-
     return e;
 }
 

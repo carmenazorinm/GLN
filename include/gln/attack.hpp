@@ -15,10 +15,6 @@ struct AttackReport {
   std::size_t combos_tested = 0; // nº de combinaciones probadas
 };
 
-// (A) Ataque por parejas (si se publicaran h_i). Útil como prueba/demostración.
-AttackReport attack_pairs_demo(const std::vector<BigInt>& h,
-                               const std::vector<BigInt>& p_true_optional = {});
-
 // (B) Ataque por tríos usando t_i:
 // - pk.t: vector público de t_i
 // - indices: el trío de posiciones (i,j,k) sobre el que atacar (p.ej. {0,1,2})

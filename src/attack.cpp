@@ -28,33 +28,6 @@ std::vector<BigInt> generate_prime_candidates(std::size_t b,
   return P;
 }
 
-
-AttackReport attack_pairs_demo(const std::vector<BigInt>& h,
-                               const std::vector<BigInt>& p_true_optional)
-{
-  AttackReport rep;
-  if (h.size() < 2) return rep;
-
-  // Para demo: si nos pasan p_true_optional del mismo tamaño, usamos (h_i, p_i) correctos.
-  // Si no, asumimos que h y p_true_optional[0..] están alineados para la demo.
-  std::vector<BigInt> p = p_true_optional;
-  if (p.size() < h.size()) p.resize(h.size(), BigInt(0));
-
-  // Toma dos índices i != j
-  std::size_t i = 0, j = 1;
-  if (gln::BigInt::sgn(p[i]) == 0 || gln::BigInt::sgn(p[j]) == 0){
-    // Sin p_i reales no podemos formar h_i * p_i - 1. Este ataque solo es para demo.
-    return rep;
-  }
-
-  BigInt X1 = h[i] * p[i] - BigInt(1);
-  BigInt X2 = h[j] * p[j] - BigInt(1);
-  rep.g_guess = gcd(X1, X2);
-  rep.combos_tested = 1;
-  // rep.found_exact lo puedes marcar en tests comparando con pk.g
-  return rep;
-}
-
 AttackReport attack_triples(const PublicKey& pk,
                             std::tuple<std::size_t,std::size_t,std::size_t> indices,
                             std::size_t b,
