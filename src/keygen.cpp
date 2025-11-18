@@ -14,8 +14,7 @@ namespace gln {
 
 
 KeyPair keygen(const Params& prm, gln::Random& rng) {
-    // 1) Elegir n primos p_i en [b+1, b+beta] bits (>= z) y mutuamente coprimos
-    //    (siendo primos y distintos, ya son coprimos).  :contentReference[oaicite:4]{index=4}
+    // n primos p_i en [b+1, b+beta] bits (>= z) y mutuamente coprimos
     const size_t n     = prm.n;
     const size_t b     = prm.b;       // ceil(log2 z)
     const size_t beta  = prm.beta;    // ventana de bits para primos
@@ -24,7 +23,7 @@ KeyPair keygen(const Params& prm, gln::Random& rng) {
 
     std::vector<BigInt> p; p.reserve(n);
 
-    // Estrategia: alternar entre tamaños de bits en [b+1, b+beta]
+    // alternar entre tamaños de bits en [b+1, b+beta]
     for (size_t i = 0; i < n; ++i) {
         size_t bits = (beta == 0 ? (b+1) : (b + 1 + (i % beta)));
         for (;;) {
@@ -36,11 +35,11 @@ KeyPair keygen(const Params& prm, gln::Random& rng) {
         }
     }
 
-    // 2) Elegir g de prm.bits_g bits, coprimo con todos los p_i.  :contentReference[oaicite:5]{index=5}
-    const size_t bits_g = prm.bits_g; // calculado con choose_params(), ver Remark 1
+    // elegir g de prm.bits_g bits, coprimo con todos los p_i.
+    const size_t bits_g = prm.bits_g; 
     BigInt g;
     for (;;) {
-        g = rng.random_of_bitlen(bits_g, /*force_odd=*/true);
+        g = rng.random_of_bitlen(bits_g,true);
         // Asegura gcd(g, p_i)=1
         bool ok = true;
         for (const auto& pi : p) {
@@ -49,14 +48,14 @@ KeyPair keygen(const Params& prm, gln::Random& rng) {
         if (ok) break;
     }
 
-    // 3) h_i = p_i^{-1} mod g   (0 < h_i < g)  :contentReference[oaicite:6]{index=6}
+    // h_i = p_i^{-1} mod g   (0 < h_i < g)
     std::vector<BigInt> h; h.reserve(n);
     h.resize(n);
     for (size_t i = 0; i < n; ++i) {
-        h[i] = invmod(p[i], g); // lanza si no invertible; debería serlo por gcd=1
+        h[i] = invmod(p[i], g);
     }
 
-    // 4) u aleatorio en (0,g), distinto de todos los h_i  :contentReference[oaicite:7]{index=7}
+    // u aleatorio en (0,g), distinto de todos los h_i
     BigInt u;
     for (;;) {
         u = rng.random_range_1_to_m1(g, bits_g);
@@ -65,7 +64,7 @@ KeyPair keygen(const Params& prm, gln::Random& rng) {
         if (!clash) break;
     }
 
-    // 5) t_i = (h_i - u) mod g  (0 <= t_i < g)  :contentReference[oaicite:8]{index=8}
+    // t_i = (h_i - u) mod g  (0 <= t_i < g) 
     std::vector<BigInt> tpub; tpub.reserve(n);
     for (size_t i = 0; i < n; ++i) {
         tpub.push_back( mod(submod(h[i], u, g), g) );
