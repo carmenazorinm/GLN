@@ -25,7 +25,6 @@ BigInt gcd(BigInt a, BigInt b){
 }
 
 void egcd(const BigInt& a, const BigInt& b, BigInt& x, BigInt& y, BigInt& g){
-  // Iterativo (EEA): devuelve x,y,g con ax + by = g = gcd(a,b)
   BigInt old_r = a, r = b;
   BigInt old_s = BigInt(1), s = BigInt(0);
   BigInt old_t = BigInt(0), t = BigInt(1);
@@ -47,29 +46,24 @@ BigInt invmod(const BigInt& a, const BigInt& m){
   return mod(x, m);
 }
 
-// TrEEA:
 TreeaOut treea(BigInt g, BigInt s){
   if (g < s || s <= BigInt(0) || g <= BigInt(0)) throw std::runtime_error("treea: requirement a >= b > 0");
   BigInt r0 = g, r1 = s;
   BigInt v0 = BigInt(0), v1 = BigInt(1);
 
-  // Primer paso “pre”
   BigInt c = r0 / r1;
   BigInt r = r0 - c*r1; r0 = r1; r1 = r;
   BigInt v = BigInt(0) - c; v0 = v1; v1 = v;
 
   while ((r1*r1) >= g){
-    // std::cout << "v1 = " << v1 << " r1 = " << r1 << std::endl;
     c = r0 / r1;
     r = r0 - c*r1; r0 = r1; r1 = r;
     v = v0 - c*v1; v0 = v1; v1 = v;
   }
 
-  // std::cout << "v1 = " << v1 << " r1 = " << r1 << std::endl;
   return { v1, r1 };
 }
 
-// Miller–Rabin muy básico (para empezar)
 static BigInt powmod(BigInt a, BigInt e, const BigInt& m){
   BigInt res = BigInt(1);
   a = mod(a,m);
@@ -82,17 +76,14 @@ static BigInt powmod(BigInt a, BigInt e, const BigInt& m){
 }
 
 bool is_probable_prime(const BigInt& n, int rounds){
-  // Rechazos rápidos
   if (n <= BigInt(1)) return false;
   if (n == BigInt(2) || n == BigInt(3)) return true;
   if ((n % BigInt(2)) == BigInt(0)) return false;
 
-  // n-1 = d * 2^s
   BigInt d = n - BigInt(1);
   int s = 0;
   while ((d % BigInt(2)) == BigInt(0)){ d /= BigInt(2); ++s; }
 
-  // bases chicas deterministas para empezar
   const int bases_small[] = {2,3,5,7,11,13,17,19,23,29,31};
   int use = std::min(rounds, (int)(sizeof(bases_small)/sizeof(int)));
   for (int i=0;i<use;i++){
@@ -117,7 +108,6 @@ BigInt next_prime(const BigInt& start){
   return p;
 }
 
-// Conversión BigInt -> uint32 (vía decimal). Asume que cabe en 32 bits.
 uint32_t to_u32(const BigInt& x) {
     const std::string s = x.str();
     return static_cast<uint32_t>(std::stoul(s));
