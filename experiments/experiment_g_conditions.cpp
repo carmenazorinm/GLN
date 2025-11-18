@@ -10,7 +10,6 @@
 #include <random>
 #include <cmath>
 
-// Proyecto GLN
 #include "gln/bigint.hpp"
 #include "gln/random.hpp"
 #include "gln/params.hpp"
@@ -43,7 +42,6 @@ static float density(std::size_t n, std::size_t bits_g) {
 }
 
 
-// Mensaje aleatorio válido: peso t_w, símbolos en [1, z-1]
 static std::vector<uint32_t> random_plaintext(gln::Random& rng, const gln::Params& prm) {
     const std::size_t n = prm.n, t = prm.t_w, z = prm.z;
     std::vector<uint32_t> e(n, 0u);
@@ -70,11 +68,11 @@ static void print_usage(const char* prog) {
     "  --n <int>         length n (default 32)\n"
     "  --t <int>         weight t (default 6)\n"
     "  --z <int>         alphabet size z (default 256)\n"
-    "  --beta <int>      beta parameter for primes (default 3)\n    --seed <uint64>    RNG seed (default 42)\n"
-    "--gbits-offset <int>     offset to prm.bits_g before keygen (can be negative, default 0)\n"
+    "  --beta <int>      beta parameter for primes (default 3)\n"
+    "  --seed <int>    RNG seed (default 42)\n"
+    "  --gbits-offset <int>     offset to prm.bits_g before keygen (can be negative, default 0)\n"
     "  --csv             print a machine-friendly CSV result line (one-liner)\n"
     "  --quiet           reduce human-readable output (still prints CSV if --csv)\n"
-    "  --check-g         check g conditions to ensure correction of the system\n"
     "  --help            show this help\n\n"
     "Example:\n"
     "  " << prog << " --n 100 --t 10 --z 1024 --beta 3 --seed 12345 --csv\n";
@@ -87,10 +85,8 @@ int main(int argc, char** argv) {
     std::size_t z = 256;
     std::size_t beta = 3;
     uint64_t seed = 42;
-    int gbits_offset=0;
     bool want_csv = false;
-    bool quiet = true;
-    bool check_g = false;
+    bool quiet = false;
     bool want_json = false;
 
     // parseo sencillo de args
@@ -101,11 +97,9 @@ int main(int argc, char** argv) {
         else if (a=="--z" && i+1<argc) { z = std::stoul(argv[++i]); }
         else if (a=="--beta" && i+1<argc) { beta = std::stoul(argv[++i]); }
         else if (a=="--seed" && i+1<argc) { seed = std::stoull(argv[++i]); }
-        else if (a=="--gbits-offset" && i+1<argc) {gbits_offset = std::stoi(argv[++i]); }
         else if (a=="--csv") { want_csv = true; }
         else if (a=="--json") { want_json = true; }
-        else if (a=="--quiet") { quiet = false; }
-        else if (a=="--check-g") { check_g = true; }
+        else if (a=="--quiet") { quiet = true; }
         else if (a=="--help") { print_usage(argv[0]); return 0; }
         else {
             std::cerr << "Unknown option: " << a << "\n";
@@ -114,19 +108,7 @@ int main(int argc, char** argv) {
         }
     }
 
-    gln::Params prm;
-    if (check_g) {
-        prm = gln::choose_params(/*n=*/n, /*t=*/t, /*z=*/z, /*beta=*/beta);
-    } else {
-        prm.n = n;
-        prm.t_w = t;
-        prm.z = z;
-        prm.b = ceil_log2(z);
-        prm.ell = ceil_log2(t);
-        prm.beta = beta;
-        prm.bits_g = gbits_offset;
-    }
-
+    gln::Params prm = gln::choose_params(/*n=*/n, /*t=*/t, /*z=*/z, /*beta=*/beta);
     gln::Random rng(seed);
 
     if (!quiet) {
@@ -205,15 +187,12 @@ int main(int argc, char** argv) {
     bool ok = (d == e);
 
     if (!quiet) {
-        if (ok) std::cout << "[OK] decrypt(encrypt(e)) == e ✅\n";
-        else   std::cout << "[ERROR] decrypt(encrypt(e)) != e ❌\n";
+        if (ok) std::cout << "[OK] decrypt(encrypt(e)) == e \n";
+        else   std::cout << "[ERROR] decrypt(encrypt(e)) != e \n";
     }
 
-    // ========== Machine-friendly CSV line ==========
-    // Cabecera sugerida:
-    // n,t,z,beta,seed,time_keygen_s,time_encrypt_s,time_decrypt_s,success
+    // ========== Print output ==========
     if (want_csv) {
-        // imprimir una sola línea CSV; ideal para scripts que redirigen la salida a un archivo
         std::cout << "CSV,"
                   << prm.n << "," << prm.t_w << "," << prm.z << "," << beta << "," << seed << "," << bitlen(kp.pk.g) << "," << bitlen(ct.c1) << "," << bitlen(ct.c2) << "," << bitlen(kp.pk.t) << ","
                   << std::fixed << std::setprecision(6)
@@ -236,7 +215,6 @@ int main(int argc, char** argv) {
     }
     else {
         float primos = pow(2,(prm.b+prm.beta))/((prm.b+prm.beta)*log(2))-pow(2,prm.b)/(prm.b*log(2));
-        // si no se pide CSV, imprimimos una línea corta tambien para scripting (comando simple)
         std::cout << "SUMMARY: "
           << "n=" << prm.n << " t=" << prm.t_w << " z=" << prm.z
           << " g_bits=" << bitlen(kp.pk.g)
