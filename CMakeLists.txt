@@ -9,7 +9,6 @@ option(GLN_USE_BOOST "Use Boost.Multiprecision as BigInt backend" ON)
 
 include_directories(${PROJECT_SOURCE_DIR}/include)
 
-# --- SOLO FUENTES EXISTENTES ---
 set(SOURCES
     src/bigint_boost.cpp
     src/nt_utils.cpp
@@ -32,20 +31,13 @@ if (GLN_USE_GMP)
   target_link_libraries(gln_core PRIVATE GMP::GMP GMP::GMPXX)
 elseif(GLN_USE_BOOST)
   target_compile_definitions(gln_core PRIVATE GLN_USE_GMP=0)
-  # Si tus headers Boost no están en /usr/include, añade:
-  # target_include_directories(gln_core PRIVATE /ruta/a/boost/include)
 else()
   message(FATAL_ERROR "Selecciona backend: -DGLN_USE_GMP=ON o -DGLN_USE_BOOST=ON")
 endif()
 
-# --- UN SOLO BINARIO MINIMO ---
-add_executable(gln_keygen apps/gln_keygen.cpp)
-target_link_libraries(gln_keygen gln_core)
+enable_testing() 
 
-# --- TESTS ---
-enable_testing()  # Añade esto para habilitar el soporte de testing
-
-# Define los ejecutables de prueba
+# test ejecutables
 add_executable(test_gcd tests/test_gcd.cpp)
 add_executable(test_bigint tests/test_bigint.cpp)
 add_executable(test_treea tests/test_treea.cpp)
@@ -57,7 +49,7 @@ add_executable(test_decrypt tests/test_decrypt.cpp)
 add_executable(test_kem tests/test_kem.cpp)
 add_executable(test_attack tests/test_attack.cpp)
 
-# Enlaza las librerías necesarias
+# enlace librerías
 target_link_libraries(test_gcd gln_core)
 target_link_libraries(test_bigint gln_core)
 target_link_libraries(test_treea gln_core)
@@ -69,7 +61,7 @@ target_link_libraries(test_decrypt gln_core)
 target_link_libraries(test_kem gln_core)
 target_link_libraries(test_attack gln_core)
 
-# Añade las pruebas DESPUÉS de definir los ejecutables
+# añadimos los tests
 add_test(NAME test_gcd COMMAND test_gcd)
 add_test(NAME test_bigint COMMAND test_bigint)
 add_test(NAME test_treea COMMAND test_treea)
@@ -81,15 +73,7 @@ add_test(NAME test_decrypt COMMAND test_decrypt)
 add_test(NAME test_kem COMMAND test_kem)
 add_test(NAME test_attack COMMAND test_attack)
 
-# Example
-add_executable(demo_pke examples/demo_pke.cpp)
-target_include_directories(demo_pke PRIVATE ${PROJECT_SOURCE_DIR}/include)
-target_link_libraries(demo_pke PRIVATE gln_core)
-
-add_executable(demo_kem examples/demo_kem.cpp)
-target_include_directories(demo_kem PRIVATE ${PROJECT_SOURCE_DIR}/include)
-target_link_libraries(demo_kem PRIVATE gln_core)
-
+# aádir resto de ejecutables
 add_executable(experiment_g_conditions experiments/experiment_g_conditions.cpp)
 target_include_directories(experiment_g_conditions PRIVATE ${PROJECT_SOURCE_DIR}/include)
 target_link_libraries(experiment_g_conditions PRIVATE gln_core)
