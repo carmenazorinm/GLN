@@ -7,7 +7,6 @@ class BigInt {
   struct Impl;         // Declaración de la implementación oculta
   Impl* p_;            // Puntero a la implementación
 public:
-  // Ctors / dtor
   BigInt();                                  // 0
   explicit BigInt(long long x);              // desde entero
   explicit BigInt(const std::string& dec);   // desde cadena decimal
@@ -18,14 +17,13 @@ public:
   BigInt& operator=(BigInt&&) noexcept;      // asignación movimiento
   ~BigInt();                                 // destructor
 
-  // (más adelante podrás añadir operadores +,-,*,/,% aquí como wrappers)
   friend std::string to_string(const BigInt&);
 
   // Aritmética
   BigInt& operator+=(const BigInt&);
   BigInt& operator-=(const BigInt&);
   BigInt& operator*=(const BigInt&);
-  BigInt& operator/=(const BigInt&);   // división entera
+  BigInt& operator/=(const BigInt&);
   BigInt& operator%=(const BigInt&);
 
   friend BigInt operator+(BigInt a, const BigInt& b){ return a+=b; }
@@ -47,8 +45,8 @@ public:
 
   // Utilidades
   static BigInt abs(const BigInt&);
-  static int    sgn(const BigInt&);      // -1, 0, 1
-  static BigInt sqrt(const BigInt&);  // Declaración como método estático
+  static int    sgn(const BigInt&);
+  static BigInt sqrt(const BigInt&);
 
   // Output operator
   std::string str() const;
