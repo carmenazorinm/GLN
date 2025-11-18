@@ -36,7 +36,7 @@ void test_invmod_positive_cases() {
         try {
             auto inv = gln::invmod(gln::BigInt(34), m);
             std::cerr << "Error: Test 4 failed - expected exception not thrown\n";
-            assert(false); // No debería llegar aquí
+            assert(false);
         } catch (const std::exception& e) {
             std::cout << "Test 4 passed: correctly caught non-coprime case\n";
         }
@@ -50,7 +50,7 @@ void test_invmod_negative_cases() {
     try {
         auto inv = gln::invmod(gln::BigInt(2), gln::BigInt(4));
         std::cerr << "Error: Test 5 failed - expected exception not thrown\n";
-        assert(false); // No debería llegar aquí
+        assert(false); 
     } catch (const std::exception& e) {
         std::cout << "Test 5 passed: correctly caught non-coprime case\n";
     }
