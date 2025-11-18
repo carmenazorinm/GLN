@@ -4,7 +4,6 @@
 #include <iostream>
 
 void test_gcd() {
-    // Caso básico
     {
         gln::BigInt a("123456"), b("7890");
         auto g = gln::gcd(a, b);
@@ -12,15 +11,13 @@ void test_gcd() {
         std::cout << "Test 1 passed: gcd(123456, 7890) == 6\n";
     }
 
-    // Números primos (debería ser 1)
     {
-        gln::BigInt a("104729"), b("104723"); // Dos números primos consecutivos
+        gln::BigInt a("104729"), b("104723"); 
         auto g = gln::gcd(a, b);
         assert(g == gln::BigInt(1));
         std::cout << "Test 2 passed: gcd(104729, 104723) == 1\n";
     }
 
-    // Caso con números grandes
     {
         gln::BigInt a("123456789012345678901234567890");
         gln::BigInt b("987654321098765432109876543210");
@@ -29,7 +26,6 @@ void test_gcd() {
         std::cout << "Test 3 passed: gcd(large1, large2) == large1\n";
     }
 
-    // Uno de los números es 0 (gcd(a,0) = a)
     {
         gln::BigInt a("123456"), b("0");
         auto g = gln::gcd(a, b);
@@ -37,7 +33,6 @@ void test_gcd() {
         std::cout << "Test 4 passed: gcd(123456, 0) == 123456\n";
     }
 
-    // Ambos números son 0 (caso especial)
     {
         gln::BigInt a("0"), b("0");
         auto g = gln::gcd(a, b);
@@ -45,7 +40,6 @@ void test_gcd() {
         std::cout << "Test 5 passed: gcd(0, 0) == 0\n";
     }
 
-    // Números iguales
     {
         gln::BigInt a("123456789"), b("123456789");
         auto g = gln::gcd(a, b);
@@ -53,7 +47,6 @@ void test_gcd() {
         std::cout << "Test 6 passed: gcd(a, a) == a\n";
     }
 
-    // Números consecutivos (debería ser 1)
     {
         gln::BigInt a("1000000000000000000001");
         gln::BigInt b("1000000000000000000000");
@@ -62,7 +55,6 @@ void test_gcd() {
         std::cout << "Test 7 passed: gcd(consecutive_numbers) == 1\n";
     }
 
-    // Caso con múltiplos
     {
         gln::BigInt a("36"), b("48");
         auto g = gln::gcd(a, b);
