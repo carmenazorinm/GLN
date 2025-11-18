@@ -40,7 +40,7 @@ void egcd(const BigInt& a, const BigInt& b, BigInt& x, BigInt& y, BigInt& g){
 }
 
 BigInt invmod(const BigInt& a, const BigInt& m){
-  if (m < BigInt(0)) throw std::runtime_error("invmod: m must be positive");
+  if (m <= BigInt(0)) throw std::runtime_error("invmod: m must be positive");
   BigInt x,y,g; egcd(mod(a,m), m, x, y, g);
   if (!(g == BigInt(1))) throw std::runtime_error("invmod: no invertible");
   return mod(x, m);
