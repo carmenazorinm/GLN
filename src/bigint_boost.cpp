@@ -34,7 +34,6 @@ struct BigInt::Impl {
 BigInt::BigInt() : p_(new Impl()) {}
 BigInt::BigInt(long long x) : p_(new Impl(x)) {}
 BigInt::BigInt(const std::string& s) : p_(new Impl(s)) {}
-// Convierte un buffer de bytes big-endian a BigInt (usa ctor desde string decimal si no tienes uno binario)
 BigInt::BigInt(const uint8_t* buf, size_t len) : p_(new Impl(buf,len)){}
 
 BigInt::BigInt(const BigInt& o) : p_(new Impl(*o.p_)) {}
@@ -52,28 +51,22 @@ BigInt& BigInt::operator=(BigInt&& o) noexcept {
 BigInt::~BigInt() { delete p_; }
 
 BigInt operator&(const BigInt& a, const BigInt& b) {
-    // Convierte a y b a cadenas decimales públicas
     std::string sa = to_string(a);
     std::string sb = to_string(b);
 
-    // Construye cpp_int desde decimal (acepta string decimal)
-    // cpp_int arbitrary_precision integer data type from <boost.Multiprecision library
-    // cpp_int for larger ints than long long
     cpp_int Ai = 0;
     cpp_int Bi = 0;
 
-    if (!sa.empty()) Ai = cpp_int(0), Ai = cpp_int(0); // inicialización (por claridad)
+    if (!sa.empty()) Ai = cpp_int(0), Ai = cpp_int(0); 
     Ai = 0;
     Bi = 0;
 
-    // parse decimal strings into cpp_int
     Ai = cpp_int(0);
     for (char c : sa) {
         if (c >= '0' && c <= '9') {
             Ai *= 10;
             Ai += cpp_int(c - '0');
         }
-        // si to_string produce signos, manejarlo si fuera necesario
     }
     Bi = cpp_int(0);
     for (char c : sb) {
@@ -83,13 +76,9 @@ BigInt operator&(const BigInt& a, const BigInt& b) {
         }
     }
 
-    // Calcula AND bitwise
     cpp_int Ci = Ai & Bi;
-
-    // Convierte Ci a string decimal
     std::string sc = Ci.convert_to<std::string>();
 
-    // Construye y devuelve un BigInt desde la cadena decimal
     return BigInt(sc);
 }
 
@@ -110,7 +99,6 @@ bool operator!=(const BigInt& a, const BigInt& b){ return a.p_->v != b.p_->v; }
 BigInt BigInt::abs(const BigInt& x){ BigInt r(x); if(r.p_->v<0) r.p_->v = -r.p_->v; return r; }
 int BigInt::sgn(const BigInt& x){ return (x.p_->v>0) - (x.p_->v<0); }
 
-// Integer square root function (returns floor(sqrt(x)))
 BigInt BigInt::sqrt(const BigInt& x)  {
     if (x.p_->v < 0) {
         throw std::runtime_error("BigInt::sqrt: negative argument");
@@ -120,20 +108,15 @@ BigInt BigInt::sqrt(const BigInt& x)  {
     return result;
 }
 
-
-// Output operator
 std::ostream& operator<<(std::ostream& os, const BigInt& x) {
     return os << x.p_->v.str();
 }
 
 std::string BigInt::str() const { return p_->v.str(); }
-// long long BigInt::to_ll() const { return p_->v.convert_to<long long>(); }
-// int BigInt::to_int() const { return p_->v.convert_to<int>(); }
-
 std::string to_string(const BigInt& x) { return x.p_->v.convert_to<std::string>(); }
 
 BigInt& BigInt::operator<<=(unsigned long k) {
-    p_->v <<= k;   // delega al cpp_int interno
+    p_->v <<= k; 
     return *this;
 }
 
