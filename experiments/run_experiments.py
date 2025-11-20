@@ -392,7 +392,7 @@ def main():
     # modo
     p.add_argument("--mode", choices=["sweep","grid","preset"], required=True)
     p.add_argument("--param", choices=["n","t","z","beta"], help="Parámetro a barrer en sweep")
-    p.add_argument("--preset", choices=list(PRESETS.keys()))
+    p.add_argument("--preset", choices=["mini","fast","big"])
 
     # listas
     p.add_argument("--Ns", help="lista n separada por comas")

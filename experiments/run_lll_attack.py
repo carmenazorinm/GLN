@@ -18,9 +18,9 @@ PRESETS = {
     "demo": {
         "ns":   [64],
         "ts":   [8, 10, 15,30,40,50],
-        "zs":   [1<<14, 1<<18, 1<<22],
+        "zs":   [1<<14],
         "betas":[3],
-        "seeds":[13,124,198,176,109,122,456,768,776,1255],        
+        "seeds":[123],        
         "use_sum": True,           
         "A": None                 
     },
@@ -243,7 +243,7 @@ def write_csv_header(writer):
 def main():
     ap = argparse.ArgumentParser(description="Barrido de ataque Lagarias-Odlyzko para GLN con presets y CSV")
     ap.add_argument("--exe", required=True, help="ruta al binario C++ que imprime JSON")
-    ap.add_argument("--preset", default=None, help="nombre del preset (ver PRESETS)")
+    ap.add_argument("--preset", default=None, help="nombre del preset (demo, n50, ...)")
     ap.add_argument("--out", required=True, help="ruta del CSV de salida")
     # modo single-run opcional (si no usas preset)
     ap.add_argument("--n", type=int)
@@ -270,6 +270,8 @@ def main():
             print(f"n: {n} - t: {t} - z: {z} ")
             try:
                 row = run_one(args.exe, n, t, z, calculate_beta(n), seed, use_sum=use_sum, A=A_preset)
+                success = row["attack_success"]
+                print(f"    - attack success: {success}")
             except Exception as e:
                 row = {
                     "n": n, "t": t, "z": z, "beta": calculate_beta(n), "seed": seed,

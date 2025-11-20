@@ -70,7 +70,9 @@ static void print_usage(const char* prog) {
     "  --z <int>         alphabet size z (default 256)\n"
     "  --beta <int>      beta parameter for primes (default 3)\n"
     "  --seed <int>    RNG seed (default 42)\n"
-    "  --gbits-offset <int>     offset to prm.bits_g before keygen (can be negative, default 0)\n"
+    "\nAttack (triples) options:\n"
+    "  --attack            run attack_triples from gln/attacks.hpp\n"
+    "\nOutput options:\n"
     "  --csv             print a machine-friendly CSV result line (one-liner)\n"
     "  --quiet           reduce human-readable output (still prints CSV if --csv)\n"
     "  --help            show this help\n\n"
@@ -88,6 +90,7 @@ int main(int argc, char** argv) {
     bool want_csv = false;
     bool quiet = false;
     bool want_json = false;
+    bool do_attack = false;
 
     // parseo sencillo de args
     for (int i=1;i<argc;++i) {
@@ -97,6 +100,7 @@ int main(int argc, char** argv) {
         else if (a=="--z" && i+1<argc) { z = std::stoul(argv[++i]); }
         else if (a=="--beta" && i+1<argc) { beta = std::stoul(argv[++i]); }
         else if (a=="--seed" && i+1<argc) { seed = std::stoull(argv[++i]); }
+        else if (a=="--attack") { do_attack = true; }
         else if (a=="--csv") { want_csv = true; }
         else if (a=="--json") { want_json = true; }
         else if (a=="--quiet") { quiet = true; }
@@ -120,7 +124,7 @@ int main(int argc, char** argv) {
                   << " seed=" << seed << "\n";
     }
 
-    // ========== KeyGen timing ==========
+    // ========== Tiempo de keygen ==========
     using clk = std::chrono::high_resolution_clock;
     auto t0 = clk::now();
     auto kp = gln::keygen(prm, rng);
@@ -134,7 +138,7 @@ int main(int argc, char** argv) {
                   << dt_keygen.count() << " s\n";
     }
 
-    // ========== Generate random plaintext ==========
+    // ========== Generar random plaintext ==========
     auto e = random_plaintext(rng, prm);
 
     if (!quiet) {
@@ -150,7 +154,7 @@ int main(int argc, char** argv) {
         std::cout << "]\n";
     }
 
-    // ========== Encrypt timing ==========
+    // ========== Tiempo de encriptación ==========
     auto t2 = clk::now();
     auto ct = gln::encrypt_checked(e, kp.pk, prm);
     auto t3 = clk::now();
@@ -162,7 +166,7 @@ int main(int argc, char** argv) {
         std::cout << "Ciphertext: c1 = " << ct.c1 << "  c2 = " << ct.c2 << "\n";
     }
 
-    // ========== Decrypt timing ==========
+    // ========== Tiempo de desencriptación ==========
     auto t4 = clk::now();
     auto d = gln::decrypt(ct, kp.sk, prm);
     auto t5 = clk::now();
@@ -183,13 +187,43 @@ int main(int argc, char** argv) {
         std::cout << "]\n";
     }
 
-    // ========== Verify ==========
+    // ========== Verificar ==========
     bool ok = (d == e);
 
     if (!quiet) {
         if (ok) std::cout << "[OK] decrypt(encrypt(e)) == e \n";
         else   std::cout << "[ERROR] decrypt(encrypt(e)) != e \n";
     }
+
+    // ========== Tiempo de ataque ==========
+    double dt_attack_total = 0.0;
+    bool attack_success = false;
+    std::size_t attack_total_combos = 0;
+
+    if (do_attack ) {
+        auto ta0 = clk::now();
+        gln::AttackReport repA = gln::attack_triples(kp.pk, prm.b, prm.beta);
+        auto ta1 = clk::now();
+        std::chrono::duration<double> dt_attack = ta1 - ta0;
+
+        dt_attack_total += dt_attack.count();
+        attack_total_combos += repA.combos_tested;
+
+        // evaluar éxito
+        attack_success = attack_success || repA.found_exact;
+
+        if (!quiet) {
+            std::cout << "Attack completed in " << std::fixed << std::setprecision(6)
+                  << dt_attack.count() << " s\n";
+            std::cout << "Expected g = " << kp.pk.g.str() << "\n";
+            std::cout << "Guessed g = " << repA.g_guess << "\n";
+            if(attack_success && repA.g_guess != kp.pk.g) {
+                std::cout << "g_guessed/g_expected " << repA.g_guess / kp.pk.g << "\n";
+            }
+        }
+    }
+
+    
 
     // ========== Print output ==========
     if (want_csv) {
@@ -227,7 +261,11 @@ int main(int argc, char** argv) {
           << " ok=" << (ok? "1":"0")
           << " n_primes=" << primos
           << " density=" << densidad << "\n";
-
+        if (do_attack) {
+            std::cout << " | attack_s=" << dt_attack_total
+                      << " found=" << (attack_success? "1":"0")
+                      << " combos=" << attack_total_combos;
+        }
     }
 
     return ok ? 0 : 2;
