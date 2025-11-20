@@ -22,7 +22,6 @@
 
 using gln::BigInt;
 
-// Mensaje aleatorio válido: peso t_w, símbolos en [1, z-1]
 static std::vector<uint32_t> random_plaintext(gln::Random& rng, const gln::Params& prm) {
     const std::size_t n = prm.n, t = prm.t_w, z = prm.z;
     std::vector<uint32_t> e(n, 0u);
@@ -55,12 +54,6 @@ static void print_usage(const char* prog) {
     "  --quiet             less verbose\n"
     "\nAttack (triples) options:\n"
     "  --attack            run attack_triples from gln/attacks.hpp\n"
-    "  --idx i,j,k         triple indices (0-based). If absent, random triples\n"
-    "  --attack-tries N    if no --idx, try N random triples (default 1)\n"
-    "  --attack-b B        bits 'b' for prime candidates (default ceil_log2(z-1) or 1)\n"
-    "  --attack-beta BETA  beta for prime range (default = --beta)\n"
-    "  --attack-maxc M     max prime candidates to generate (default 2000)\n"
-    "  --validate-g        mark attack as success if g_guess equals/divides pk.g\n"
     "\nExample:\n"
     "  " << prog << " --n 100 --t 10 --z 1024 --beta 3 --seed 12345 --attack --attack-tries 50 --csv\n";
 }
@@ -77,12 +70,6 @@ int main(int argc, char** argv) {
 
     // Ataque (por tríos)
     bool do_attack = false;
-    bool have_fixed_idx = false;
-    std::size_t idx_i=0, idx_j=1, idx_k=2;
-    std::size_t attack_tries = 1;
-    std::size_t attack_b = std::numeric_limits<std::size_t>::max(); // usar valor por defecto si se queda así
-    std::size_t attack_beta = std::numeric_limits<std::size_t>::max();
-    std::size_t attack_maxc = 2000;
     bool validate_g = true;
 
     // parse args
@@ -94,14 +81,9 @@ int main(int argc, char** argv) {
         else if (a=="--beta" && iarg+1<argc) { beta = std::stoul(argv[++iarg]); }
         else if (a=="--seed" && iarg+1<argc) { seed = std::stoull(argv[++iarg]); }
         else if (a=="--csv") { want_csv = true; }
-        else if (a=="--quiet") { quiet = false; }
+        else if (a=="--quiet") { quiet = true; }
 
         else if (a=="--attack") { do_attack = true; }
-        else if (a=="--attack-tries" && iarg+1<argc) { attack_tries = std::stoul(argv[++iarg]); }
-        else if (a=="--attack-b" && iarg+1<argc) { attack_b = std::stoul(argv[++iarg]); }
-        else if (a=="--attack-beta" && iarg+1<argc) { attack_beta = std::stoul(argv[++iarg]); }
-        else if (a=="--attack-maxc" && iarg+1<argc) { attack_maxc = std::stoul(argv[++iarg]); }
-        else if (a=="--validate-g") { validate_g = true; }
 
         else if (a=="--help") { print_usage(argv[0]); return 0; }
         else {
@@ -179,33 +161,23 @@ int main(int argc, char** argv) {
         else    std::cout << "[ERROR] decrypt(encrypt(e)) != e ❌\n";
     }
 
-    // ======== Ataque por tríos (opcional) ========
     double dt_attack_total = 0.0;
     bool attack_success = false;
-    std::size_t attack_best_bits = 0;
     std::size_t attack_total_combos = 0;
-    BigInt best_g_guess(0);
 
     if (do_attack /*&& !attack_success*/) {
-        // std::cout << "Ataque " << r << " con i="<<i << " j=" << j << " k=" << k << std::endl;
         auto ta0 = clk::now();
         gln::AttackReport repA = gln::attack_triples(kp.pk, prm.b, prm.beta);
         auto ta1 = clk::now();
         std::chrono::duration<double> dt_attack = ta1 - ta0;
-        // std::cout << "Tiempo: " << dt_attack.count() << " Combos tested: " << repA.combos_tested;
 
         dt_attack_total += dt_attack.count();
         attack_total_combos += repA.combos_tested;
 
         // evaluar éxito
-        bool found = repA.found_exact;
-        attack_success = attack_success || found;
+        attack_success = attack_success || repA.found_exact;
     }
 
-    // ======== Salida CSV ========
-    // Cabecera lógica:
-    // CSV,n,t,z,beta,seed,time_keygen_s,time_encrypt_s,time_decrypt_s,success,
-    // attack,attack_tries,attack_b,attack_beta,attack_maxc,attack_time_s,attack_found,attack_bits,attack_combos
     if (want_csv) {
         std::cout << "CSV,"
                   << prm.n << "," << prm.t_w << "," << prm.z << "," << beta << "," << seed << ","
@@ -213,17 +185,12 @@ int main(int argc, char** argv) {
                   << dt_keygen.count() << "," << dt_encrypt.count() << "," << dt_decrypt.count() << ","
                   << (ok ? "1" : "0") << ","
                   << (do_attack ? "1" : "0") << ","
-                  << attack_tries << ","
-                  << (do_attack ? attack_b : 0) << ","
-                  << (do_attack ? attack_beta : 0) << ","
-                  << (do_attack ? attack_maxc : 0) << ","
                   << std::fixed << std::setprecision(6) << (do_attack ? dt_attack_total : 0.0) << ","
                   << (attack_success ? "1" : "0") << ","
-                  << attack_best_bits << ","
                   << attack_total_combos
                   << "\n";
     } else {
-        std::cout << "SUMMARY: n=" << prm.n << " t=" << prm.t_w << " z=" << prm.z
+        std::cout << "SUMMARY: n=" << prm.n << " t=" << prm.t_w << " z=" << prm.z 
                   << " keygen_s=" << std::fixed << std::setprecision(6) << dt_keygen.count()
                   << " enc_s=" << dt_encrypt.count()
                   << " dec_s=" << dt_decrypt.count()
@@ -231,7 +198,6 @@ int main(int argc, char** argv) {
         if (do_attack) {
             std::cout << " | attack_s=" << dt_attack_total
                       << " found=" << (attack_success? "1":"0")
-                      << " bits=" << attack_best_bits
                       << " combos=" << attack_total_combos;
         }
         std::cout << "\n";

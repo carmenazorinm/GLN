@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 # gln_lattice_attack_grid.py
-# Ejecuta con: sage -python gln_lattice_attack_grid.py ...
+# Ejecuta con: sage -python llll_attack_robust.py --exe ../build/experiment_g_conditions --preset demo --out results.csv
 
-import argparse, json, subprocess, sys, csv, time, itertools
+import argparse, json, subprocess, sys, csv, time, itertools, math
+
 
 try:
     from sage.all import matrix, block_matrix, identity_matrix, zero_matrix, ZZ
@@ -10,21 +11,75 @@ except Exception:
     print("Ejecuta con Sage: sage -python gln_lattice_attack_grid.py ...", file=sys.stderr)
     sys.exit(1)
 
-# ---------------------------
-# PRESETS: edita aquí lo que quieras barrer
-# ---------------------------
+def calculate_beta(n):
+    return 2 + math.ceil(math.log2(n))
+
 PRESETS = {
     "demo": {
         "ns":   [64],
         "ts":   [8, 10, 15,30,40,50],
         "zs":   [1<<14, 1<<18, 1<<22],
         "betas":[3],
-        "seeds":[13,124,198,176,109,122,456,768,776,1255],        # puedes añadir más
-        "use_sum": True,           # usa restricción de suma
-        "A": None                  # si None, se usa A = z-1
+        "seeds":[13,124,198,176,109,122,456,768,776,1255],        
+        "use_sum": True,           
+        "A": None                 
     },
-    # Ejemplo extra:
-    # "bkz_zone": {...}
+    "n50": {
+        "ns":   [50],
+        "ts":   [0.4*50,0.6*50,0.8*50],
+        "zs": [pow(2,10),pow(2,12),pow(2,14),pow(2,16),pow(2,18),pow(2,20),pow(2,22),pow(2,24),pow(2,26),pow(2,28),pow(2,30),pow(2,32),pow(2,34),pow(2,36),pow(2,38),pow(2,40)],
+        "betas": [3],
+        "seeds": [13,124,198,176,109,122,456,768,776,1255],        
+        "use_sum": True,           
+        "A": None                 
+    }
+    ,
+    "n50_extra": {
+        "ns":   [50],
+        "ts":   [0.1*50,0.15*50,0.2*50,0.25*50,0.3*50,0.35*50,0.4*50,0.45*50,0.5*50,0.55*50,0.6*50,0.65*50, 0.7*50,0.75*50,0.8*50,0.85*50,0.9*50,0.95*50],
+        "zs": [pow(2,10),pow(2,12),pow(2,14),pow(2,16),pow(2,18),pow(2,20),pow(2,22),pow(2,24),pow(2,26),pow(2,28),pow(2,30),pow(2,32),pow(2,34),pow(2,36),pow(2,38),pow(2,40)],
+        "betas": [1,2,3,4,5],
+        "seeds": [13,124,198,176,109,122,456,768,776,1255],        
+        "use_sum": True,           
+        "A": None                 
+    },
+    "n100": {
+        "ns":   [100],
+        "ts":   [0.4*100,0.6*100,0.8*100],
+        "zs": [pow(2,10),pow(2,12),pow(2,14),pow(2,16),pow(2,18),pow(2,20),pow(2,22),pow(2,24),pow(2,26),pow(2,28),pow(2,30),pow(2,32),pow(2,34),pow(2,36),pow(2,38),pow(2,40)],
+        "betas": [3],
+        "seeds": [13,124,198,176,109,122,456,768,776,1255],        
+        "use_sum": True,           
+        "A": None                 
+    },
+    "n100_extra": {
+        "ns":   [100],
+        "ts":   [0.1*100,0.15*100,0.2*100,0.25*100,0.3*100,0.35*100,0.4*100,0.45*100,0.5*100,0.55*100,0.6*100,0.65*100, 0.7*100,0.75*100,0.8*100,0.85*100,0.9*100,0.95*100],
+        "zs": [pow(2,10),pow(2,12),pow(2,14),pow(2,16),pow(2,18),pow(2,20),pow(2,22),pow(2,24),pow(2,26),pow(2,28),pow(2,30),pow(2,32),pow(2,34),pow(2,36),pow(2,38),pow(2,40)],
+        "betas": [1,2,3,4,5],
+        "seeds": [13,124,198,176,109,122,456,768,776,1255],        
+        "use_sum": True,           
+        "A": None                 
+    },
+    "n200": {
+        "ns":   [200],
+        "ts":   [0.4*200,0.6*200,0.8*200],
+        "zs": [pow(2,10),pow(2,12),pow(2,14),pow(2,16),pow(2,18),pow(2,20),pow(2,22),pow(2,24),pow(2,26),pow(2,28),pow(2,30),pow(2,32),pow(2,34),pow(2,36),pow(2,38),pow(2,40)],
+        "betas": [3],
+        "seeds": [13,124,198,176,109,122,456,768,776,1255],        
+        "use_sum": True,           
+        "A": None                 
+    },
+    "n75_extra": {
+        "ns":   [75],
+        "ts":   [0.1*75,0.15*75,0.2*75,0.25*75,0.3*75,0.35*75,0.4*75,0.45*75,0.5*75,0.55*75,0.6*75,0.65*75, 0.7*75,0.75*75,0.8*75,0.85*75,0.9*75,0.95*75],
+        "zs": [pow(2,10),pow(2,12),pow(2,14),pow(2,16),pow(2,18),pow(2,20),pow(2,22),pow(2,24),pow(2,26),pow(2,28),pow(2,30),pow(2,32),pow(2,34),pow(2,36),pow(2,38),pow(2,40)],
+        "betas": [1,2,3,4,5],
+        "seeds": [13,124,198,176,109,122,456,768,776,1255],        
+        "use_sum": True,           
+        "A": None                 
+    },
+    
 }
 
 # ---------------------------
@@ -42,8 +97,8 @@ def run_cpp_and_get_instance(exe, n, t, z, beta, seed):
         "--z", str(z),
         "--beta", str(beta),
         "--seed", str(seed),
-        "--check-g",
-        "--json"
+        "--json",
+        "--quiet"
     ]
     res = subprocess.run(cmd, capture_output=True, text=True)
     if res.returncode != 0:
@@ -149,17 +204,16 @@ def try_attack(h, c1, c2, t, A, use_sum=True):
 # ---------------------------
 # Grid runner
 # ---------------------------
+def calculate_beta(n):
+    return 2 + math.ceil(math.log2(n))
+
 def run_one(exe, n, t, z, beta, seed, use_sum, A=None):
-    # A por defecto: z-1
     A_eff = (z - 1) if A is None else A
 
-    # 1) instancia desde C++
     h, c1, c2, pt_true, density = run_cpp_and_get_instance(exe, n, t, z, beta, seed)
 
-    # 2) ataque
     x_rec, method, attack_time_s = try_attack(h, c1, c2, t, A_eff, use_sum=use_sum)
 
-    # 3) métricas
     success = x_rec is not None
     weight_ok = sum_ok = eq_ok = pt_match = False
     if success:
@@ -213,11 +267,12 @@ def main():
         total_cfg = len(ns)*len(ts)*len(zs)*len(betas)*len(seeds)
         print(f"[info] Ejecutando preset '{args.preset}' con {total_cfg} configuraciones...")
         for n, t, z, beta, seed in itertools.product(ns, ts, zs, betas, seeds):
+            print(f"n: {n} - t: {t} - z: {z} ")
             try:
-                row = run_one(args.exe, n, t, z, beta, seed, use_sum=use_sum, A=A_preset)
+                row = run_one(args.exe, n, t, z, calculate_beta(n), seed, use_sum=use_sum, A=A_preset)
             except Exception as e:
                 row = {
-                    "n": n, "t": t, "z": z, "beta": beta, "seed": seed,
+                    "n": n, "t": t, "z": z, "beta": calculate_beta(n), "seed": seed,
                     "A": (z-1 if A_preset is None else A_preset),
                     "density": "",
                     "len_h": "",
@@ -245,7 +300,6 @@ def main():
             }
         rows.append(row)
 
-    # escribir CSV
     with open(args.out, "w", newline="") as f:
         w = csv.writer(f)
         write_csv_header(w)
