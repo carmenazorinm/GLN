@@ -114,7 +114,7 @@ Usando hasta 8 hilos.
 Guardadas 6 líneas CSV en demos_results.csv
 ```
 
-### Uso del script
+### Opciones disponibles
 ```
 usage: experimento.py [-h] --preset {big,demo} [--exe EXE] [--output OUTPUT] [--threads THREADS]
 
@@ -151,7 +151,7 @@ pip install sagemath
 ```
 
 
-### Uso:
+### Opciones disponibles
 
 ```
 usage: run_lll_attack.py [-h] --exe EXE [--preset PRESET] --out OUT
