@@ -18,8 +18,7 @@ set(SOURCES
     src/decrypt.cpp
     src/kem.cpp
     src/attack.cpp
-    experiments/experiment_g_conditions.cpp
-    experiments/experiment_trios_attack.cpp 
+    experiments/main.cpp 
 )
 
 add_library(gln_core ${SOURCES})
@@ -74,10 +73,6 @@ add_test(NAME test_kem COMMAND test_kem)
 add_test(NAME test_attack COMMAND test_attack)
 
 # aádir resto de ejecutables
-add_executable(experiment_g_conditions experiments/experiment_g_conditions.cpp)
-target_include_directories(experiment_g_conditions PRIVATE ${PROJECT_SOURCE_DIR}/include)
-target_link_libraries(experiment_g_conditions PRIVATE gln_core)
-
-add_executable(experiment_trios_attack experiments/experiment_trios_attack.cpp)
-target_include_directories(experiment_trios_attack PRIVATE ${PROJECT_SOURCE_DIR}/include)
-target_link_libraries(experiment_trios_attack PRIVATE gln_core)
+add_executable(main experiments/main.cpp)
+target_include_directories(main PRIVATE ${PROJECT_SOURCE_DIR}/include)
+target_link_libraries(main PRIVATE gln_core)

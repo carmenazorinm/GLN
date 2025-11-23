@@ -9,6 +9,7 @@
 #include <sstream>
 #include <random>
 #include <cmath>
+#include <bits/stdc++.h>
 
 #include "gln/bigint.hpp"
 #include "gln/random.hpp"
@@ -20,7 +21,7 @@
 
 using gln::BigInt;
 
-static std::size_t ceil_log2(std::size_t x){
+static std::size_t ceil_log2(const std::size_t x){
     if (x <= 1) return 0;
     std::size_t r=0, v=x-1; while(v){ v>>=1; ++r; } return r;
 }
@@ -41,6 +42,18 @@ static float density(std::size_t n, std::size_t bits_g) {
     return n*1.0/bits_g;
 }
 
+static long double brute_force_security_bits(int n, int t) {
+    if (t < 0 || t > n) return 0.0L;
+    // Aprovechamos simetría C(n,t) = C(n, n-t)
+    int k = std::min(t, n - t);
+
+    long double log2C = 0.0L;
+    for (int i = 1; i <= k; ++i) {
+        // log2( C(n,k) ) = sum_{i=1..k} log2(n-k+i) - log2(i)
+        log2C += log2l(n - k + i) - log2l(i);
+    }
+    return log2C;
+}
 
 static std::vector<uint32_t> random_plaintext(gln::Random& rng, const gln::Params& prm) {
     const std::size_t n = prm.n, t = prm.t_w, z = prm.z;
@@ -74,6 +87,7 @@ static void print_usage(const char* prog) {
     "  --attack            run attack_triples from gln/attacks.hpp\n"
     "\nOutput options:\n"
     "  --csv             print a machine-friendly CSV result line (one-liner)\n"
+    "  --json            print a machine-friendly JSON result line (one-liner)\n"
     "  --quiet           reduce human-readable output (still prints CSV if --csv)\n"
     "  --help            show this help\n\n"
     "Example:\n"
@@ -130,8 +144,6 @@ int main(int argc, char** argv) {
     auto kp = gln::keygen(prm, rng);
     auto t1 = clk::now();
     std::chrono::duration<double> dt_keygen = t1 - t0;
-
-    float densidad = density(prm.n, prm.bits_g);
 
     if (!quiet) {
         std::cout << "KeyGen completed in " << std::fixed << std::setprecision(6)
@@ -223,7 +235,14 @@ int main(int argc, char** argv) {
         }
     }
 
-    
+    // ========== Cálculo de métricas ==========
+
+    float densidad = density(prm.n, prm.bits_g);
+    float primos = pow(2,(prm.b+prm.beta))/((prm.b+prm.beta)*log(2))-pow(2,prm.b)/(prm.b*log(2));
+    int log2_6 = ceil_log2(6);
+    int sec_triples = 3*ceil_log2(primos) - log2_6;
+    int sec_brute = brute_force_security_bits(prm.n,prm.t_w);
+        
 
     // ========== Print output ==========
     if (want_csv) {
@@ -231,7 +250,7 @@ int main(int argc, char** argv) {
                   << prm.n << "," << prm.t_w << "," << prm.z << "," << beta << "," << seed << "," << bitlen(kp.pk.g) << "," << bitlen(ct.c1) << "," << bitlen(ct.c2) << "," << bitlen(kp.pk.t) << ","
                   << std::fixed << std::setprecision(6)
                   << dt_keygen.count() << "," << dt_encrypt.count() << "," << dt_decrypt.count() << ","
-                  << (ok ? "1" : "0")
+                  << (ok ? "1" : "0") << "," << primos << "," << sec_triples << "," << sec_brute
                   << "\n";
     } else if(want_json) {
         std::cout << "{" << "\"h\": [" << kp.pk.t[0].str();
@@ -248,7 +267,6 @@ int main(int argc, char** argv) {
         std::cout << "}";
     }
     else {
-        float primos = pow(2,(prm.b+prm.beta))/((prm.b+prm.beta)*log(2))-pow(2,prm.b)/(prm.b*log(2));
         std::cout << "SUMMARY: "
           << "n=" << prm.n << " t=" << prm.t_w << " z=" << prm.z
           << " g_bits=" << bitlen(kp.pk.g)
@@ -260,6 +278,8 @@ int main(int argc, char** argv) {
           << " dec_s=" << dt_decrypt.count()
           << " ok=" << (ok? "1":"0")
           << " n_primes=" << primos
+          << " sec_triples=" << sec_triples
+          << " sec_brute_force=" << sec_brute
           << " density=" << densidad << "\n";
         if (do_attack) {
             std::cout << " | attack_s=" << dt_attack_total

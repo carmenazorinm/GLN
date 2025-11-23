@@ -34,9 +34,9 @@ ctest --test-dir build
 
 ---
 
-## Experimento principal: experiment_g_conditions
+## Experimento principal: main
 
-El ejecutable principal es experiment_g_conditions. A partir de unos parámetros n, t, z y beta, el programa:
+El ejecutable principal es main. A partir de unos parámetros n, t, z y beta, el programa:
 
 - genera parámetros y claves
 
@@ -49,27 +49,27 @@ El ejecutable principal es experiment_g_conditions. A partir de unos parámetros
 Ejemplo de ejecución:
 ```bash
 cd build
-./experiment_g_conditions --n 10 --t 3 --z 1024 --beta 1 --seed 123
+./main --n 10 --t 3 --z 1024 --beta 1 --seed 123
 ```
 
 Salida típica:
 ```bash
 Parameters: n=10 t=3 z=1024 beta=1 |g|≈71 bits seed=123
-KeyGen completed in 0.002536 s
+KeyGen completed in 0.002854 s
 Plaintext (sparse) generated (showing non-zero entries): [2:404, 4:568, 9:956]
 Encryption completed in 0.000006 s
 Ciphertext: c1 = 946181556283540302817300  c2 = 1928
-Decryption completed in 0.000203 s
+Decryption completed in 0.000200 s
 Recovered plaintext non-zero entries: [2:404, 4:568, 9:956]
 [OK] decrypt(encrypt(e)) == e 
-SUMMARY: n=10 t=3 z=1024 g_bits=22 c1_bits=24 c2_bits=4 pubkey_bits=210 keygen_s=0.002536 enc_s=0.000006 dec_s=0.000203 ok=1 n_primes=120.871613 density=0.140845
+SUMMARY: n=10 t=3 z=1024 g_bits=22 c1_bits=24 c2_bits=4 pubkey_bits=210 keygen_s=0.002854 enc_s=0.000006 dec_s=0.000200 ok=1 n_primes=120.871613 sec_triples=18 sec_brute_force=6 density=0.140845
 ```
 
 ### Opciones disponibles
 
 Las opciones completas se pueden consultar con --help:
 ```bash
-Usage: ./experiment_g_conditions [options]
+Usage: ./main [options]
 
 Options:
   --n <int>         length n (default 32)
@@ -87,8 +87,10 @@ Output options:
   --help            show this help
 
 Example:
-  ./experiment_g_conditions --n 100 --t 10 --z 1024 --beta 3 --seed 12345 --csv
+  ./main --n 100 --t 10 --z 1024 --beta 3 --seed 12345 --csv
 ```
+
+Esto quiere decir que también se puede ejecutar el ataque por tríos sobre la clave privada. IMPORTANTE: este ataque puede tardar mucho tiempo.
 
 ---
 
@@ -99,87 +101,55 @@ Para lanzar múltiples experimentos con distintas configuraciones de parámetros
 Ejemplo de uso con el preset mini:
 ```bash
 cd experiments
-python3 run_experiments.py --exe ../build/experiment_g_conditions --mode preset --preset mini
+python3 run_experiments.py --preset demo --output demos_results.csv
 ```
 
 Salida típica:
 ```bash
-[1/6] n=32 t=6 z=256 beta=7 keygen=0.008395 enc=9e-06 dec=0.000348 g_bits=55 pubkey_bits=1757 c1_bits=58 c2_bits=3 ok=True rc=0
-[2/6] n=32 t=6 z=256 beta=7 keygen=0.007529 enc=9e-06 dec=0.000322 g_bits=56 pubkey_bits=1759 c1_bits=58 c2_bits=4 ok=True rc=0
-[3/6] n=32 t=6 z=256 beta=7 keygen=0.007343 enc=9e-06 dec=0.000364 g_bits=56 pubkey_bits=1763 c1_bits=58 c2_bits=3 ok=True rc=0
-[4/6] n=64 t=6 z=256 beta=8 keygen=0.023208 enc=9e-06 dec=0.000465 g_bits=59 pubkey_bits=3758 c1_bits=62 c2_bits=4 ok=True rc=0
-[5/6] n=64 t=6 z=256 beta=8 keygen=0.022321 enc=1.3e-05 dec=0.000851 g_bits=59 pubkey_bits=3752 c1_bits=62 c2_bits=3 ok=True rc=0
-[6/6] n=64 t=6 z=256 beta=8 keygen=0.02261 enc=1.2e-05 dec=0.000831 g_bits=59 pubkey_bits=3759 c1_bits=62 c2_bits=3 ok=True rc=0
-CSV crudo: results.csv
-CSV agregado: results_aggregated.csv
+Preset 'demo': 6 configuraciones a ejecutar.
+Usando hasta 8 hilos.
+
+[INFO] Completadas 6/6 configuraciones
+
+Guardadas 6 líneas CSV en demos_results.csv
 ```
 
 ### Uso del script
 ```
-usage: run_experiments.py [-h] --exe EXE --mode {sweep,grid,preset}
-                          [--param {n,t,z,beta}] [--preset {mini,fast,big}]
-                          [--Ns NS] [--Ts TS] [--Zs ZS] [--Betas BETAS]
-                          [--base-n BASE_N] [--base-t BASE_T]
-                          [--base-z BASE_Z] [--base-beta BASE_BETA]
-                          [--runs RUNS] [--seed SEED] [--threads THREADS]
-                          [--out OUT] [--out-agg OUT_AGG] [--plots PLOTS]
+usage: experimento.py [-h] --preset {big,demo} [--exe EXE] [--output OUTPUT] [--threads THREADS]
 
-Runner de experimentos GLN con --check-g
+Lanzar main en batch y guardar CSV.
 
 options:
-  -h, --help            show this help message and exit
-  --exe EXE             Ruta del ejecutable, ej: ~/experiments/experiment_g_conditions
-  --mode {sweep,grid,preset}
-  --param {n,t,z,beta}  Parámetro a barrer en sweep
-  --preset {mini,fast,big}
-  --Ns NS               lista n separada por comas
-  --Ts TS               lista t separada por comas
-  --Zs ZS               lista z separada por comas
-  --Betas BETAS         lista beta separada por comas
-  --base-n BASE_N
-  --base-t BASE_T
-  --base-z BASE_Z
-  --base-beta BASE_BETA
-  --runs RUNS
-  --seed SEED
-  --threads THREADS
-  --out OUT
-  --out-agg OUT_AGG
-  --plots PLOTS
+  -h, --help           show this help message and exit
+  --preset {big,demo}  Nombre del preset a usar (por ejemplo: big).
+  --exe EXE            Ruta al ejecutable (por defecto ../buiild/main).
+  --output OUTPUT      Nombre del fichero CSV de salida.
+  --threads THREADS    Número máximo de hilos (experimentos en paralelo), por defecto 8.
 ```
 
 El preset mini definido en el script es:
 ```
-"mini": {
-    "Ns": [32, 64],
-    "Ts": [6],
-    "Zs": [256],
-    "Betas": [3],
-    "mode": "sweep",
-    "param": "n",
-    "runs": 2
-}
+"demo": {
+        "Ns":    [50],
+        "Ws":    [0.4,0.6],        # pesos t/n
+        "Zs":    [pow(2,15),pow(2,20),pow(2,25)],
+        "Seeds": [123],
+    },
 ```
 
-Esto significa:
+El archivo generado como output guarda la salida CSV recibida por el ejecutable en cada configuración probada.
 
-- Se ejecuta el binario indicado en --exe para todas las combinaciones de parámetros listadas.
-
-- Con mode = "sweep" y param = "n" se realiza un barrido del parámetro n.
-
-- runs = 2 indica que cada configuración se repite dos veces.
-
-El script también puede:
-
-- generar gráficas con la opción --plots directorio_plots
-
-- ejecutarse en paralelo con la opción --threads N
-
-Por defecto se usa 1 thread y se realizan 3 ejecuciones (runs=3) por configuración si no se indica lo contrario.
 
 ## Ataque LLL: run_lll_attack.py
 
 Para experimentar con ataques de baja densidad (tipo Lagarias–Odlyzko) sobre GLN se proporciona el script run_lll_attack.py, que llama al binario C++ y usa SageMath para aplicar LLL.
+
+Prerrequisito: instalar librería sagemath.
+```
+pip install sagemath
+```
+
 
 ### Uso:
 
@@ -207,7 +177,7 @@ options:
 Ejemplo de uso:
 ```
 cd experiments
-sage -python llll_attack_robust.py --exe ../build/experiment_g_conditions --preset demo --out results.csv
+sage -python llll_attack_robust.py --exe ../build/main --preset demo --out results.csv
 ```
 
 Salida típica:
