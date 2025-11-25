@@ -16,7 +16,6 @@ set(SOURCES
     src/keygen.cpp
     src/encrypt.cpp
     src/decrypt.cpp
-    src/kem.cpp
     src/attack.cpp
     experiments/main.cpp 
 )
@@ -45,7 +44,6 @@ add_executable(test_params tests/test_params.cpp)
 add_executable(test_keygen tests/test_keygen.cpp)
 add_executable(test_encrypt tests/test_encrypt.cpp)
 add_executable(test_decrypt tests/test_decrypt.cpp)
-add_executable(test_kem tests/test_kem.cpp)
 add_executable(test_attack tests/test_attack.cpp)
 
 # enlace librerías
@@ -57,7 +55,6 @@ target_link_libraries(test_params gln_core)
 target_link_libraries(test_keygen gln_core)
 target_link_libraries(test_encrypt gln_core)
 target_link_libraries(test_decrypt gln_core)
-target_link_libraries(test_kem gln_core)
 target_link_libraries(test_attack gln_core)
 
 # añadimos los tests
@@ -69,7 +66,6 @@ add_test(NAME test_params COMMAND test_params)
 add_test(NAME test_keygen COMMAND test_keygen)
 add_test(NAME test_encrypt COMMAND test_encrypt)
 add_test(NAME test_decrypt COMMAND test_decrypt)
-add_test(NAME test_kem COMMAND test_kem)
 add_test(NAME test_attack COMMAND test_attack)
 
 # aádir resto de ejecutables

@@ -10,7 +10,7 @@
 using namespace gln;
 
 static void test_basic() {
-  Params prm = choose_params(/*n*/10, /*t_w*/5, /*z*/2, /*beta*/6);
+  Params prm = choose_params(/*n*/10, /*t_w*/3, /*z*/1024, /*beta*/1);
   Random rng;
   KeyPair kp = keygen(prm, rng);
 
